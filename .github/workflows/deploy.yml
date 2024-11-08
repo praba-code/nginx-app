@@ -46,8 +46,8 @@ jobs:
         EOF
 
       env:
-        DOCKER_USERNAME: ${{ secrets.prabadevops1003}}
-        DOCKER_PASSWORD: ${{ secrets.ght6KD@ALPxGTTU }}
-        EC2_PUBLIC_IP: ${{ secrets.3.0.175.228 }}
+        DOCKER_USERNAME: "prabadevops1003"
+        DOCKER_PASSWORD: "ght6KD@ALPxGTTU"
+        EC2_PUBLIC_IP: "3.0.175.228"
 
 
