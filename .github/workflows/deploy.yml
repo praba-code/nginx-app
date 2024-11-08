@@ -1,43 +1,53 @@
-name: Deploy Nginx App
+name: Deploy to AWS EC2
 
-# Trigger the workflow on push to the main branch
 on:
   push:
     branches:
-      - main  # You can change this to a different branch if needed
+      - main
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # Define the runner environment for this job
+    runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the code from the repository
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      # Step 2: Set up Docker Buildx (used for multi-platform builds)
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
 
-      # Step 3: Log in to Docker Hub (optional - for pushing the image to Docker Hub)
-      # Uncomment these lines if you plan to push to Docker Hub
-      # - name: Log in to Docker Hub
-      #   uses: docker/login-action@v2
-      #   with:
-      #     username: ${{ secrets.DOCKER_USERNAME }}
-      #     password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Cache Docker layers
+      uses: actions/cache@v2
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
 
-      # Step 4: Build the Docker image using the Dockerfile in the repository
-      - name: Build Docker image
-        run: |
-          docker build -t nginx-app .
+    - name: Build Docker image
+      run: docker build -t nginx-app .
 
-      # Step 5: Run the Docker container from the built image (optional for testing)
-      - name: Run Docker container
-        run: |
-          docker run -d -p 80:80 nginx-app
+    - name: Push Docker image to Docker Hub
+      run: |
+        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+        docker tag nginx-app $DOCKER_USERNAME/nginx-app:latest
+        docker push $DOCKER_USERNAME/nginx-app:latest
 
-      # Step 6: Verify the running Docker container
-      - name: List running Docker containers
-        run: docker ps
+    - name: Set up SSH key
+      run: |
+        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ecs_key.pem
+        chmod 600 ~/.ssh/ecs_key.pem
+
+    - name: Deploy to EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/ecs_key.pem ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+          docker pull $DOCKER_USERNAME/nginx-app:latest
+          docker run -d -p 80:80 $DOCKER_USERNAME/nginx-app:latest
+        EOF
+
+      env:
+        DOCKER_USERNAME: ${{ secrets.prabadevops1003}}
+        DOCKER_PASSWORD: ${{ secrets.ght6KD@ALPxGTTU }}
+        EC2_PUBLIC_IP: ${{ secrets.3.0.175.228 }}
+
 
