@@ -3,49 +3,45 @@ name: Deploy to AWS EC2
 on:
   push:
     branches:
-      - main  # Indentation should be consistent here
+      - main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest  # Make sure this is aligned correctly
+  build-and-deploy:
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3  # Ensure this is aligned properly
+      uses: actions/checkout@v3
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2  # Indentation alignment check
-
-    - name: Cache Docker layers
-      uses: actions/cache@v3  # Indentation alignment check
-      with:
-        path: /tmp/.buildx-cache  # Sub-level indentation check
-        key: ${{ runner.os }}-buildx-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-buildx-
+      uses: docker/setup-buildx-action@v2
 
     - name: Build Docker image
       run: docker build -t nginx-app .
 
-    - name: Docker login to Docker Hub
-      run: |
-        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-
-    - name: Tag and push Docker image to Docker Hub
-      run: |
-        docker tag nginx-app $DOCKER_USERNAME/nginx-app:latest
-        docker push $DOCKER_USERNAME/nginx-app:latest
-
-    - name: Decode EC2 SSH private key and deploy to EC2
+    - name: Prepare SSH key for EC2
       run: |
         echo "${{ secrets.EC2_SSH_KEY }}" | base64 --decode > ~/.ssh/ecs_key.pem
         chmod 600 ~/.ssh/ecs_key.pem
-        
+
+    - name: Deploy to EC2 and Run Docker Container
+      run: |
         ssh -o StrictHostKeyChecking=no -i ~/.ssh/ecs_key.pem ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
-          docker pull $DOCKER_USERNAME/nginx-app:latest
-          docker run -d -p 80:80 $DOCKER_USERNAME/nginx-app:latest
+          # Ensure Docker is running on EC2
+          sudo systemctl start docker || echo "Docker already running"
+
+          # Remove any previous instance of the container
+          docker stop nginx-app || true
+          docker rm nginx-app || true
+
+          # Copy Dockerfile and application files to EC2
+          mkdir -p ~/app
+          scp -i ~/.ssh/ecs_key.pem -r * ubuntu@${{ secrets.EC2_PUBLIC_IP }}:~/app
+
+          # Build and run the Docker container directly on EC2
+          cd ~/app
+          docker build -t nginx-app .
+          docker run -d -p 80:80 --name nginx-app nginx-app
         EOF
       env:
-        DOCKER_USERNAME: prabadevops1003
-        DOCKER_PASSWORD: ght6KD@ALPxGTTU
         EC2_PUBLIC_IP: 3.0.175.228
