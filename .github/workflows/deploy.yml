@@ -27,9 +27,12 @@ jobs:
     - name: Build Docker image
       run: docker build -t nginx-app .
 
-    - name: Push Docker image to Docker Hub
+    - name: Docker login to Docker Hub
       run: |
         echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+
+    - name: Tag and push Docker image to Docker Hub
+      run: |
         docker tag nginx-app $DOCKER_USERNAME/nginx-app:latest
         docker push $DOCKER_USERNAME/nginx-app:latest
 
@@ -38,13 +41,12 @@ jobs:
         echo "${{ secrets.EC2_SSH_KEY }}" | base64 --decode > ~/.ssh/ecs_key.pem
         chmod 600 ~/.ssh/ecs_key.pem
         
-        ssh -o StrictHostKeyChecking=no -i ~/.ssh/ecs_key.pemubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/ecs_key.pem ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
           docker pull $DOCKER_USERNAME/nginx-app:latest
           docker run -d -p 80:80 $DOCKER_USERNAME/nginx-app:latest
         EOF
-      env:
+     env:
         DOCKER_USERNAME: "prabadevops1003"
         DOCKER_PASSWORD: "ght6KD@ALPxGTTU"
         EC2_PUBLIC_IP: "3.0.175.228"
-
 
