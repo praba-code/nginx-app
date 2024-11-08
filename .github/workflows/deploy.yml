@@ -21,6 +21,9 @@ jobs:
 
     - name: Prepare SSH key for EC2
       run: |
+        # Create .ssh directory if it doesn't exist
+        mkdir -p ~/.ssh
+        # Decode and store SSH private key for EC2 access
         echo "${{ secrets.EC2_SSH_KEY }}" | base64 --decode > ~/.ssh/ecs_key.pem
         chmod 600 ~/.ssh/ecs_key.pem
 
@@ -34,7 +37,7 @@ jobs:
           docker stop nginx-app || true
           docker rm nginx-app || true
 
-          # Copy Dockerfile and application files to EC2
+          # Create app directory and copy application files to EC2
           mkdir -p ~/app
           scp -i ~/.ssh/ecs_key.pem -r * ubuntu@${{ secrets.EC2_PUBLIC_IP }}:~/app
 
