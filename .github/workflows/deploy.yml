@@ -3,23 +3,23 @@ name: Deploy to AWS EC2
 on:
   push:
     branches:
-      - main
+      - main  # Indentation should be consistent here
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Make sure this is aligned correctly
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3  # Updated to v3
+      uses: actions/checkout@v3  # Ensure this is aligned properly
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2  # Updated to v2
+      uses: docker/setup-buildx-action@v2  # Indentation alignment check
 
     - name: Cache Docker layers
-      uses: actions/cache@v3  # Already at v3
+      uses: actions/cache@v3  # Indentation alignment check
       with:
-        path: /tmp/.buildx-cache
+        path: /tmp/.buildx-cache  # Sub-level indentation check
         key: ${{ runner.os }}-buildx-${{ github.sha }}
         restore-keys: |
           ${{ runner.os }}-buildx-
@@ -45,8 +45,7 @@ jobs:
           docker pull $DOCKER_USERNAME/nginx-app:latest
           docker run -d -p 80:80 $DOCKER_USERNAME/nginx-app:latest
         EOF
-     env:
+      env:
         DOCKER_USERNAME: "prabadevops1003"
         DOCKER_PASSWORD: "ght6KD@ALPxGTTU"
         EC2_PUBLIC_IP: "3.0.175.228"
-
