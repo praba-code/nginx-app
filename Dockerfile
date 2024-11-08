@@ -4,5 +4,5 @@ FROM nginx:latest
 # Copy HTML content to the default Nginx path
 COPY . /usr/share/nginx/html
 
-# Expose port 80
+#Expose port 80
 EXPOSE 80
