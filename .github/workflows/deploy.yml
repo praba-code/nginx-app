@@ -46,6 +46,6 @@ jobs:
           docker run -d -p 80:80 $DOCKER_USERNAME/nginx-app:latest
         EOF
       env:
-        DOCKER_USERNAME: "prabadevops1003"
-        DOCKER_PASSWORD: "ght6KD@ALPxGTTU"
-        EC2_PUBLIC_IP: "3.0.175.228"
+        DOCKER_USERNAME: prabadevops1003
+        DOCKER_PASSWORD: ght6KD@ALPxGTTU
+        EC2_PUBLIC_IP: 3.0.175.228
