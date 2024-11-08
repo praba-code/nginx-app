@@ -1,22 +1,43 @@
+name: Deploy Nginx App
 
-     name: Deploy Nginx App
+# Trigger the workflow on push to the main branch
+on:
+  push:
+    branches:
+      - main  # You can change this to a different branch if needed
 
-     on:
-       push:
-         branches:
-           - main
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Define the runner environment for this job
 
-     jobs:
-       build:
-         runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout the code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-         steps:
-         - name: Checkout code
-           uses: actions/checkout@v2
+      # Step 2: Set up Docker Buildx (used for multi-platform builds)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-         - name: Build Docker image
-           run: docker build -t nginx-app .
+      # Step 3: Log in to Docker Hub (optional - for pushing the image to Docker Hub)
+      # Uncomment these lines if you plan to push to Docker Hub
+      # - name: Log in to Docker Hub
+      #   uses: docker/login-action@v2
+      #   with:
+      #     username: ${{ secrets.DOCKER_USERNAME }}
+      #     password: ${{ secrets.DOCKER_PASSWORD }}
 
-         - name: Run Docker container
-           run: docker run -d -p 80:80 nginx-app
+      # Step 4: Build the Docker image using the Dockerfile in the repository
+      - name: Build Docker image
+        run: |
+          docker build -t nginx-app .
+
+      # Step 5: Run the Docker container from the built image (optional for testing)
+      - name: Run Docker container
+        run: |
+          docker run -d -p 80:80 nginx-app
+
+      # Step 6: Verify the running Docker container
+      - name: List running Docker containers
+        run: docker ps
 
