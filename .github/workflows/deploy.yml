@@ -1,48 +1,35 @@
-name: Deploy to AWS EC2
+name: Deploy Nginx with Docker to AWS EC2
 
 on:
   push:
     branches:
-      - main
+      - main  # Trigger the workflow on push to the main branch
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    - name: Checkout Repository
+      uses: actions/checkout@v2
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
 
-    - name: Build Docker image
-      run: docker build -t nginx-app .
-
-    - name: Prepare SSH key for EC2
+    - name: Build Docker Image
       run: |
-        mkdir -p /home/ubuntu/.ssh/
-        echo "${{ secrets.EC2_SSH_KEY }}" | base64 --decode > /home/ubuntu/.ssh/aws-deploy-new.pem
-        chmod 600 /home/ubuntu/.ssh/aws-deploy-new.pem
+        docker build -t nginx-app .
 
-    - name: Deploy to EC2 and Run Docker Container
+    - name: Login to AWS (EC2 Instance)
+      uses: webfactory/create-ssh-key@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}  # Set your private key in GitHub secrets
+
+    - name: Deploy to EC2
       run: |
-        # SSH into the EC2 instance
-        ssh -o StrictHostKeyChecking=no -i /home/ubuntu/.ssh/aws-deploy-new.pem ubuntu@54.254.205.59 << 'EOF'
-          # Ensure Docker is running on EC2
-          sudo systemctl start docker || echo "Docker already running"
-
-          # Remove any previous instance of the container
-          docker stop nginx-app || true
-          docker rm nginx-app || true
-
-          # Create app directory
-          mkdir -p ~/app
-
-          # Build and run the Docker container
-          cd ~/app
-          docker build -t nginx-app .
-          docker run -d -p 80:80 --name nginx-app nginx-app
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/aws-deploy-new.pem ubuntu@54.169.129.16 << 'EOF'
+          docker pull nginx-app
+          docker stop nginx || true
+          docker rm nginx || true
+          docker run -d -p 80:80 --name nginx nginx-app
         EOF
-      env:
-        EC2_PUBLIC_IP: 54.254.205.59
