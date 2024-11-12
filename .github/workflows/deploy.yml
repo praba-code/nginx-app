@@ -28,7 +28,7 @@ jobs:
     - name: Deploy to EC2 and Run Docker Container
       run: |
         # SSH into the EC2 instance
-        ssh -o StrictHostKeyChecking=no -i ~/.ssh/ecs1_key.pem root@3.0.175.228 << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/ecs_key.pem root@3.0.175.228 << 'EOF'
           # Ensure Docker is running on EC2
           sudo systemctl start docker || echo "Docker already running"
 
