@@ -56,4 +56,3 @@ jobs:
           docker stop my-nginx-container || true
           docker rm my-nginx-container || true
           docker run -d --name my-nginx-container -p 80:80 ${{ secrets.DOCKER_USERNAME }}/my-nginx-app:latest
->>>>>>> 8afb947bddeb6763e52b464e698b548b81c379ac
