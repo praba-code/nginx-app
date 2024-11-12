@@ -47,7 +47,7 @@ jobs:
       uses: appleboy/ssh-action@v0.1.5
       with:
         host: ${{ secrets.EC2_IP }}
-        username: ec2-user
+        username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
           # Pull the latest image from Docker Hub (if using Docker Hub)
