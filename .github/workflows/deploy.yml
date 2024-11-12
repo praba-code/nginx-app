@@ -1,32 +1,41 @@
-name: Deploy to AWS EC2
+name: Deploy to EC2
 
 on:
   push:
     branches:
-      - main
+      - main  # Trigger the deployment on pushing to the main branch
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
+    # Step 1: Checkout the code
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v2
 
+    # Step 2: Set up Docker Buildx
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
 
+    # Step 3: Log in to Docker Hub (optional if you want to push to Docker Hub)
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    # Step 4: Build and Push Docker Image (optional if you push to Docker Hub)
     - name: Build Docker image
-      run: docker build -t nginx-app .
-
-    - name: Prepare SSH key for EC2
       run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.EC2_SSH_KEY }}" | base64 --decode > ~/.ssh/ecs1_key.pem
-        chmod 600 ~/.ssh/ecs1_key.pem
+        docker build -t my-nginx-app .
+        docker tag my-nginx-app:latest ${{ secrets.DOCKER_USERNAME }}/my-nginx-app:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/my-nginx-app:latest
 
-    - name: Deploy to EC2 and Run Docker Container
+   # Step 2: Set up SSH Agent and add the private key
+    - name: Set up SSH agent
       run: |
+<<<<<<< HEAD
         # SSH into the EC2 instance
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/ecs_key.pem root@3.0.175.228 << 'EOF'
           # Ensure Docker is running on EC2
@@ -46,3 +55,26 @@ jobs:
         EOF
       env:
         EC2_PUBLIC_IP: 3.0.175.228
+=======
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        eval $(ssh-agent -s)
+        ssh-add ~/.ssh/id_rsa
+
+
+    # Step 5: SSH into EC2 and deploy the app
+    - name: SSH to EC2 and Deploy
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: ${{ secrets.EC2_IP }}
+        username: ubuntu
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          # Pull the latest image from Docker Hub (if using Docker Hub)
+          docker pull ${{ secrets.DOCKER_USERNAME }}/my-nginx-app:latest
+          # Run the Nginx container on EC2
+          docker stop my-nginx-container || true
+          docker rm my-nginx-container || true
+          docker run -d --name my-nginx-container -p 80:80 ${{ secrets.DOCKER_USERNAME }}/my-nginx-app:latest
+>>>>>>> 8afb947bddeb6763e52b464e698b548b81c379ac
