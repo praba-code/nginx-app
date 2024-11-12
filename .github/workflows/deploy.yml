@@ -32,6 +32,11 @@ jobs:
         docker tag my-nginx-app:latest ${{ secrets.DOCKER_USERNAME }}/my-nginx-app:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/my-nginx-app:latest
 
+   - name: Test SSH connection
+     run: |
+     ssh -v -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_IP }} "echo 'SSH successful'"
+
+
     # Step 5: SSH into EC2 and deploy the app
     - name: SSH to EC2 and Deploy
       uses: appleboy/ssh-action@v0.1.5
