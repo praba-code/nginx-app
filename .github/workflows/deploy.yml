@@ -27,7 +27,7 @@ jobs:
 
     - name: Deploy to EC2
       run: |
-        ssh -o StrictHostKeyChecking=no -i ~/.ssh/aws-deploy-new.pem ubuntu@54.169.129.16 << 'EOF'
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@54.169.129.16 << 'EOF'
           docker pull nginx-app
           docker stop nginx || true
           docker rm nginx || true
