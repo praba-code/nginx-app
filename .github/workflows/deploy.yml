@@ -19,11 +19,19 @@ jobs:
     - name: Build Docker image
       run: docker build -t nginx-app .
 
-    - name: Prepare SSH key for EC2
+   # - name: Prepare SSH key for EC2
+     # run: |
+      #  mkdir -p /home/ubuntu/.ssh/
+       # echo "${{ secrets.EC2_SSH_KEY }}" | base64 --decode > /home/ubuntu/.ssh/aws-deploy-new.pem
+       # chmod 600 /home/ubuntu/.ssh/aws-deploy-new.pem
+
+    - name: Set up SSH key
       run: |
-        mkdir -p /home/ubuntu/.ssh/
-        echo "${{ secrets.EC2_SSH_KEY }}" | base64 --decode > /home/ubuntu/.ssh/aws-deploy-new.pem
-        chmod 600 /home/ubuntu/.ssh/aws-deploy-new.pem
+         mkdir -p $HOME/.ssh
+         echo "***your base64-encoded key here***" | base64 --decode > $HOME/.ssh/aws-deploy-new.pem
+         chmod 600 $HOME/.ssh/aws-deploy-new.pem
+         shell: /usr/bin/bash -e {0}
+
 
     - name: Deploy to EC2 and Run Docker Container
       run: |
